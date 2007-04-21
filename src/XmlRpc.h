@@ -48,6 +48,8 @@ namespace XmlRpc {
 
     //! Report an error. Custom error handlers should define this method.
     virtual void error(const char* msg) = 0;
+    
+    virtual ~XmlRpcErrorHandler() {};
 
   protected:
     static XmlRpcErrorHandler* _errorHandler;
@@ -74,6 +76,8 @@ namespace XmlRpc {
 
     //! Output a message. Custom error handlers should define this method.
     virtual void log(int level, const char* msg) = 0;
+
+    virtual ~XmlRpcLogHandler() {};
 
   protected:
     static XmlRpcLogHandler* _logHandler;
