@@ -137,7 +137,7 @@ public:
   {
     std::cerr << "ModerateSizeArrayCheck\n";
     std::string s = params[0][0];
-    s += params[0][params[0].size()-1];
+    s += (std::string) params[0][params[0].size()-1];
     result = s;
   }
 } moderateSizeArrayCheck(&s);
