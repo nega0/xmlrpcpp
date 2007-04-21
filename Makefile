@@ -3,8 +3,8 @@ CXX		= g++
 SRC		= ./src
 CPPFLAGS	= -I$(SRC)
 DEBUG		= -g
-OPTIMIZE	= -O2
-GCCWARN		= -Wall -Wstrict-prototypes
+OPTIMIZE	= -O0
+GCCWARN		= -Wall # -Wstrict-prototypes
 CXXFLAGS	= $(DEBUG) $(GCCWARN) $(OPTIMIZE) $(INCLUDES)
 
 LIB		= ./libXmlRpc.a
