@@ -72,7 +72,7 @@ struct ClearFlagOnExit {
 // Returns true if the request was sent and a result received (although the result
 // might be a fault).
 bool 
-XmlRpcClient::execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result)
+XmlRpcClient::execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result, double timeout)
 {
   XmlRpcUtil::log(1, "XmlRpcClient::execute: method %s (_connectionState %d).", method, _connectionState);
 
@@ -95,8 +95,26 @@ XmlRpcClient::execute(const char* method, XmlRpcValue const& params, XmlRpcValue
     return false;
 
   result.clear();
-  double msTime = -1.0;   // Process until exit is called
-  _disp.work(msTime);
+  
+  if (_disp.work(timeout) == XmlRpcDispatch::Reason_TimedOut)
+  {
+    // Connection timed out, possibly because the server died. Let's try
+    // to re-start the connection once again if this is keep-open connection:
+    if (getKeepOpen())
+    {
+      XmlRpcUtil::log(4, "XmlRpcClient::execute: re-trying connection");
+      XmlRpcSource::close();
+      _eof = false;
+  
+      if ( ! setupConnection())
+        return false;
+
+      if (_disp.work(timeout) == XmlRpcDispatch::Reason_TimedOut)
+      {
+        return false;
+      }
+    }
+  }
 
   if (_connectionState != IDLE || ! parseResponse(result))
     return false;

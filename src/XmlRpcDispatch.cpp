@@ -75,13 +75,15 @@ XmlRpcDispatch::setSourceEvents(XmlRpcSource* source, unsigned eventMask)
 
 
 // Watch current set of sources and process events
-void
+XmlRpcDispatch::WorkEndReason
 XmlRpcDispatch::work(double timeout)
 {
   // Compute end time
   _endTime = (timeout < 0.0) ? -1.0 : (getTime() + timeout);
   _doClear = false;
   _inWork = true;
+
+  WorkEndReason reason = Reason_NoSources;
 
   // Only work while there is something to monitor
   while (_sources.size() > 0) {
@@ -118,7 +120,7 @@ XmlRpcDispatch::work(double timeout)
     {
       XmlRpcUtil::error("Error in XmlRpcDispatch::work: error in select (%d).", nEvents);
       _inWork = false;
-      return;
+      return Reason_Error;
     }
 
     // Process events
@@ -171,10 +173,14 @@ XmlRpcDispatch::work(double timeout)
 
     // Check whether end time has passed
     if (0 <= _endTime && getTime() > _endTime)
+    {
+      reason = (_endTime == 0.0) ? Reason_Interrupted : Reason_TimedOut;
       break;
+    }
   }
 
   _inWork = false;
+  return reason;
 }
 
 

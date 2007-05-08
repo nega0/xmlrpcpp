@@ -31,6 +31,14 @@ namespace XmlRpc {
       WritableEvent = 2,    //!< connected/data can be written without blocking
       Exception     = 4     //!< uh oh
     };
+
+    //! Values indicating the reason why work() returned
+    enum WorkEndReason {
+      Reason_TimedOut,      //!< select timed out on msTime
+      Reason_Interrupted,   //!< exit() was called
+      Reason_NoSources,     //!< no more sources to monitor
+      Reason_Error          //!< an error occured
+    };
     
     //! Monitor this source for the event types specified by the event mask
     //! and call its event handler when any of the events occur.
@@ -48,7 +56,7 @@ namespace XmlRpc {
 
     //! Watch current set of sources and process events for the specified
     //! duration (in ms, -1 implies wait forever, or until exit is called)
-    void work(double msTime);
+    WorkEndReason work(double msTime);
 
     //! Exit from work routine
     void exit();

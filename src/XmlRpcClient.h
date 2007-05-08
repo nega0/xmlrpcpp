@@ -55,7 +55,7 @@ namespace XmlRpc {
     //! Currently this is a synchronous (blocking) implementation (execute
     //! does not return until it receives a response or an error). Use isFault()
     //! to determine whether the result is a fault response.
-    bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result);
+    bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result, double timeout = -1.0);
 
     //! Returns true if the result of the last execute() was a fault response.
     bool isFault() const { return _isFault; }
