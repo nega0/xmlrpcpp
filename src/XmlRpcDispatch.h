@@ -63,11 +63,13 @@ namespace XmlRpc {
 
     // A source to monitor and what to monitor it for
     struct MonitoredSource {
-      MonitoredSource(XmlRpcSource* src, unsigned mask) : _src(src), _mask(mask) {}
+      MonitoredSource(XmlRpcSource* src, unsigned mask) : _src(src), _mask(mask), _markedForDeletion(false) {}
       XmlRpcSource* getSource() const { return _src; }
       unsigned& getMask() { return _mask; }
+      bool& getMarkedForDeletion() { return _markedForDeletion; }
       XmlRpcSource* _src;
       unsigned _mask;
+      bool _markedForDeletion;
     };
 
     // A list of sources to monitor
@@ -75,6 +77,7 @@ namespace XmlRpc {
 
     // Sources being monitored
     SourceList _sources;
+    bool _sourcesDelayedDelete;
 
     // When work should stop (-1 implies wait forever, or until exit is called)
     double _endTime;

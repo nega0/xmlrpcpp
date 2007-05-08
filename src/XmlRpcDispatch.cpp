@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <sys/timeb.h>
+#include <assert.h>
 
 #if defined(_WINDOWS)
 # include <winsock2.h>
@@ -27,6 +28,7 @@ XmlRpcDispatch::XmlRpcDispatch()
   _endTime = -1.0;
   _doClear = false;
   _inWork = false;
+  _sourcesDelayedDelete = false;
 }
 
 
@@ -47,9 +49,12 @@ void
 XmlRpcDispatch::removeSource(XmlRpcSource* source)
 {
   for (SourceList::iterator it=_sources.begin(); it!=_sources.end(); ++it)
-    if (it->getSource() == source)
+    if (it->getSource() == source && !it->getMarkedForDeletion())
     {
-      _sources.erase(it);
+      if (_sourcesDelayedDelete)
+        it->getMarkedForDeletion() = true;
+      else
+        _sources.erase(it);
       break;
     }
 }
@@ -60,7 +65,7 @@ void
 XmlRpcDispatch::setSourceEvents(XmlRpcSource* source, unsigned eventMask)
 {
   for (SourceList::iterator it=_sources.begin(); it!=_sources.end(); ++it)
-    if (it->getSource() == source)
+    if (it->getSource() == source && !it->getMarkedForDeletion())
     {
       it->getMask() = eventMask;
       break;
@@ -124,6 +129,11 @@ XmlRpcDispatch::work(double timeout)
       int fd = src->getfd();
       unsigned newMask = (unsigned) -1;
       if (fd <= maxFd) {
+        // forbid removal of elements from _sources during handleEvent(),
+        // it would invalidate our interator:
+        assert( !_sourcesDelayedDelete );
+        _sourcesDelayedDelete = true;
+        
         // If you select on multiple event types this could be ambiguous
         if (FD_ISSET(fd, &inFd))
           newMask &= src->handleEvent(ReadableEvent);
@@ -132,8 +142,12 @@ XmlRpcDispatch::work(double timeout)
         if (FD_ISSET(fd, &excFd))
           newMask &= src->handleEvent(Exception);
 
-        if ( ! newMask) {
-          _sources.erase(thisIt);  // Stop monitoring this one
+        _sourcesDelayedDelete = false;
+
+        if (thisIt->getMarkedForDeletion()) {
+          it =_sources.erase(thisIt);
+        } else if ( ! newMask) {
+          it = _sources.erase(thisIt);  // Stop monitoring this one
           if ( ! src->getKeepOpen())
             src->close();
         } else if (newMask != (unsigned) -1) {
@@ -205,5 +219,6 @@ XmlRpcDispatch::getTime()
   return (tv.tv_sec + tv.tv_usec / 1000000.0);
 #endif /* USE_FTIME */
 }
+
 
 
