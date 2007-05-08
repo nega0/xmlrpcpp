@@ -252,8 +252,8 @@ XmlRpcSocket::getErrorMsg()
 std::string 
 XmlRpcSocket::getErrorMsg(int error)
 {
-  char err[60];
-  snprintf(err,sizeof(err),"error %d", error);
+  char err[256];
+  snprintf(err,sizeof(err),"error %d - %s", error, strerror(error));
   return std::string(err);
 }
 
