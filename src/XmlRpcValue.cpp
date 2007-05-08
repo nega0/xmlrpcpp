@@ -3,12 +3,14 @@
 #include "XmlRpcException.h"
 #include "XmlRpcUtil.h"
 #include "base64.h"
+#include "c_strdouble.h"
 
 #ifndef MAKEDEPEND
 # include <iostream>
 # include <ostream>
 # include <stdlib.h>
 # include <stdio.h>
+# include <stdexcept>
 #endif
 
 namespace XmlRpc {
@@ -42,10 +44,6 @@ namespace XmlRpc {
   static const char MEMBER_ETAG[]   = "</member>";
   static const char STRUCT_ETAG[]   = "</struct>";
 
-
-      
-  // Format strings
-  std::string XmlRpcValue::_doubleFormat("%f");
 
 
 
@@ -328,26 +326,26 @@ namespace XmlRpc {
   bool XmlRpcValue::doubleFromXml(std::string const& valueXml, int* offset)
   {
     const char* valueStart = valueXml.c_str() + *offset;
-    char* valueEnd;
-    double dvalue = strtod(valueStart, &valueEnd);
-    if (valueEnd == valueStart)
+    try
+    {
+      size_t chars;
+      double dvalue = str_to_double(valueStart, &chars);
+      _type = TypeDouble;
+      _value.asDouble = dvalue;
+      *offset += int(chars);
+      return true;
+    }
+    catch ( std::runtime_error& )
+    {
       return false;
-
-    _type = TypeDouble;
-    _value.asDouble = dvalue;
-    *offset += int(valueEnd - valueStart);
-    return true;
+    }
   }
 
   std::string XmlRpcValue::doubleToXml() const
   {
-    char buf[256];
-    snprintf(buf, sizeof(buf)-1, getDoubleFormat().c_str(), _value.asDouble);
-    buf[sizeof(buf)-1] = 0;
-
     std::string xml = VALUE_TAG;
     xml += DOUBLE_TAG;
-    xml += buf;
+    xml += double_to_str(_value.asDouble);
     xml += DOUBLE_ETAG;
     xml += VALUE_ETAG;
     return xml;

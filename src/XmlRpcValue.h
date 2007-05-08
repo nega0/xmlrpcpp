@@ -122,13 +122,6 @@ namespace XmlRpc {
     //! Write the value (no xml encoding)
     std::ostream& write(std::ostream& os) const;
 
-    // Formatting
-    //! Return the format used to write double values.
-    static std::string const& getDoubleFormat() { return _doubleFormat; }
-
-    //! Specify the format used to write double values.
-    static void setDoubleFormat(const char* f) { _doubleFormat = f; }
-
 
   protected:
     // Clean up
@@ -159,9 +152,6 @@ namespace XmlRpc {
     std::string binaryToXml() const;
     std::string arrayToXml() const;
     std::string structToXml() const;
-
-    // Format strings
-    static std::string _doubleFormat;
 
     // Type tag and values
     Type _type;

@@ -20,7 +20,8 @@ LDLIBS		= $(LIB) $(SYSTEMLIBS)
 OBJ		= $(SRC)/XmlRpcClient.o $(SRC)/XmlRpcDispatch.o \
 		$(SRC)/XmlRpcServer.o $(SRC)/XmlRpcServerConnection.o \
 		$(SRC)/XmlRpcServerMethod.o $(SRC)/XmlRpcSocket.o $(SRC)/XmlRpcSource.o \
-		$(SRC)/XmlRpcUtil.o $(SRC)/XmlRpcValue.o
+		$(SRC)/XmlRpcUtil.o $(SRC)/XmlRpcValue.o \
+		$(SRC)/XmlRpcMutex.o $(SRC)/c_dtoa.o $(SRC)/c_strdouble.o
 
 all:		$(LIB) tests
 
