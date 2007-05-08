@@ -66,6 +66,12 @@ namespace XmlRpc {
 
   
   // Type checking
+  void XmlRpcValue::assertTypeOrInvalid(Type t) const
+  {
+    if (_type != t)
+      throw XmlRpcException("type error");
+  }
+
   void XmlRpcValue::assertTypeOrInvalid(Type t)
   {
     if (_type == TypeInvalid)

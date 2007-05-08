@@ -84,12 +84,18 @@ namespace XmlRpc {
     bool operator==(XmlRpcValue const& other) const;
     bool operator!=(XmlRpcValue const& other) const;
 
-    operator bool&()          { assertTypeOrInvalid(TypeBoolean); return _value.asBool; }
-    operator int&()           { assertTypeOrInvalid(TypeInt); return _value.asInt; }
-    operator double&()        { assertTypeOrInvalid(TypeDouble); return _value.asDouble; }
-    operator std::string&()   { assertTypeOrInvalid(TypeString); return *_value.asString; }
-    operator BinaryData&()    { assertTypeOrInvalid(TypeBase64); return *_value.asBinary; }
-    operator struct tm&()     { assertTypeOrInvalid(TypeDateTime); return *_value.asTime; }
+    operator bool&()                    { assertTypeOrInvalid(TypeBoolean); return _value.asBool; }
+    operator bool() const               { assertTypeOrInvalid(TypeBoolean); return _value.asBool; }
+    operator int&()                     { assertTypeOrInvalid(TypeInt); return _value.asInt; }
+    operator int() const                { assertTypeOrInvalid(TypeInt); return _value.asInt; }
+    operator double&()                  { assertTypeOrInvalid(TypeDouble); return _value.asDouble; }
+    operator double() const             { assertTypeOrInvalid(TypeDouble); return _value.asDouble; }
+    operator std::string&()             { assertTypeOrInvalid(TypeString); return *_value.asString; }
+    operator const std::string&() const { assertTypeOrInvalid(TypeString); return *_value.asString; }
+    operator BinaryData&()              { assertTypeOrInvalid(TypeBase64); return *_value.asBinary; }
+    operator const BinaryData&() const  { assertTypeOrInvalid(TypeBase64); return *_value.asBinary; }
+    operator struct tm&()               { assertTypeOrInvalid(TypeDateTime); return *_value.asTime; }
+    operator const struct tm&() const   { assertTypeOrInvalid(TypeDateTime); return *_value.asTime; }
 
     XmlRpcValue const& operator[](int i) const { assertArray(i+1); return _value.asArray->at(i); }
     XmlRpcValue& operator[](int i)             { assertArray(i+1); return _value.asArray->at(i); }
@@ -135,6 +141,7 @@ namespace XmlRpc {
     void invalidate();
 
     // Type checking
+    void assertTypeOrInvalid(Type t) const;
     void assertTypeOrInvalid(Type t);
     void assertArray(int size) const;
     void assertArray(int size);
