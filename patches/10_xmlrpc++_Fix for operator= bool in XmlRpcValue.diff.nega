@@ -1,0 +1,11 @@
+diff -u -r xmlrpc++0.7.old/src/XmlRpcValue.h xmlrpc++0.7/src/XmlRpcValue.h
+--- xmlrpc++0.7.old/src/XmlRpcValue.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcValue.h	2007-04-05 13:45:32.000000000 -0400
+@@ -77,6 +77,7 @@
+ 
+     // Operators
+     XmlRpcValue& operator=(XmlRpcValue const& rhs);
++    XmlRpcValue& operator=(bool const& rhs) { return operator=(XmlRpcValue(rhs)); }
+     XmlRpcValue& operator=(int const& rhs) { return operator=(XmlRpcValue(rhs)); }
+     XmlRpcValue& operator=(double const& rhs) { return operator=(XmlRpcValue(rhs)); }
+     XmlRpcValue& operator=(const char* rhs) { return operator=(XmlRpcValue(std::string(rhs))); }

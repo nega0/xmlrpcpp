@@ -1,0 +1,164 @@
+diff -N -r -u xmlrpc++0.7.old/src/XmlRpcServer.cpp xmlrpc++0.7/src/XmlRpcServer.cpp
+--- xmlrpc++0.7.old/src/XmlRpcServer.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcServer.cpp	2007-04-05 15:46:30.000000000 -0400
+@@ -69,6 +69,19 @@
+ bool 
+ XmlRpcServer::bindAndListen(int port, int backlog /*= 5*/)
+ {
++	const char* host = 0;  // Indicates "listen on INADDR_ANY"
++	return XmlRpcServer::bindAndListen(host, port, backlog);
++}
++
++bool 
++XmlRpcServer::bindAndListen(const std::string& host, int port, int backlog /*= 5*/)
++{
++	return XmlRpcServer::bindAndListen(host.c_str(), port, backlog);
++}
++
++bool 
++XmlRpcServer::bindAndListen(const char* host, int port, int backlog /*= 5*/)
++{
+   int fd = XmlRpcSocket::socket();
+   if (fd < 0)
+   {
+@@ -95,10 +108,13 @@
+   }
+ 
+   // Bind to the specified port on the default interface
+-  if ( ! XmlRpcSocket::bind(fd, port))
++  if ( ! XmlRpcSocket::bind(fd, host, port))
+   {
+     this->close();
+-    XmlRpcUtil::error("XmlRpcServer::bindAndListen: Could not bind to specified port (%s).", XmlRpcSocket::getErrorMsg().c_str());
++    if (host)
++      XmlRpcUtil::error("XmlRpcServer::bindAndListen: Could not bind to host %s port %d (%s).", host, port, XmlRpcSocket::getErrorMsg().c_str());
++    else
++      XmlRpcUtil::error("XmlRpcServer::bindAndListen: Could not bind to port %d (%s).", port, XmlRpcSocket::getErrorMsg().c_str());
+     return false;
+   }
+ 
+@@ -110,7 +126,13 @@
+     return false;
+   }
+ 
+-  XmlRpcUtil::log(2, "XmlRpcServer::bindAndListen: server listening on port %d fd %d", port, fd);
++  if (host) {
++    XmlRpcUtil::log(2, "XmlRpcServer::bindAndListen: server listening on host %s port %d fd %d", host, port, fd);
++  }
++  else
++  {
++    XmlRpcUtil::log(2, "XmlRpcServer::bindAndListen: server listening on port %d fd %d", port, fd);
++  }
+ 
+   // Notify the dispatcher to listen on this source when we are in work()
+   _disp.addSource(this, XmlRpcDispatch::ReadableEvent);
+diff -N -r -u xmlrpc++0.7.old/src/XmlRpcServer.h xmlrpc++0.7/src/XmlRpcServer.h
+--- xmlrpc++0.7.old/src/XmlRpcServer.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcServer.h	2007-04-05 15:46:30.000000000 -0400
+@@ -56,6 +56,14 @@
+     //! set it in listen mode to make it available for clients.
+     bool bindAndListen(int port, int backlog = 5);
+ 
++    //! Create a socket, bind to the specified host and port, and
++    //! set it in listen mode to make it available for clients.
++    bool bindAndListen(const char* host, int port, int backlog = 5);
++
++    //! Create a socket, bind to the specified host and port, and
++    //! set it in listen mode to make it available for clients.
++    bool bindAndListen(const std::string& host, int port, int backlog = 5);
++
+     //! Process client requests for the specified time
+     void work(double msTime);
+ 
+diff -N -r -u xmlrpc++0.7.old/src/XmlRpcSocket.cpp xmlrpc++0.7/src/XmlRpcSocket.cpp
+--- xmlrpc++0.7.old/src/XmlRpcSocket.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcSocket.cpp	2007-04-05 15:46:30.000000000 -0400
+@@ -110,10 +110,39 @@
+ bool 
+ XmlRpcSocket::bind(int fd, int port)
+ {
++  const char *host = 0; // Indicates "listen on INADDR_ANY"
++  return (XmlRpcSocket::bind(fd, host, port));
++}
++
++
++// Bind to a specified port
++bool 
++XmlRpcSocket::bind(int fd, const std::string& host, int port)
++{
++  return (XmlRpcSocket::bind(fd, host.c_str(), port));
++}
++
++
++// Bind to a specified port
++bool 
++XmlRpcSocket::bind(int fd, const char *host, int port)
++{
+   struct sockaddr_in saddr;
+   memset(&saddr, 0, sizeof(saddr));
+   saddr.sin_family = AF_INET;
+-  saddr.sin_addr.s_addr = htonl(INADDR_ANY);
++  if (host)
++  {
++    // In theory, it's not thread-safe to call gethostbyname(). In practice,
++    // binding to a server port is usually done at startup; we're unlikely to
++    // see two threads simultaneously try to bind to ports
++    struct hostent *hp = gethostbyname(host);
++    if (hp == 0) return false;
++    memcpy(&saddr.sin_addr, hp->h_addr, hp->h_length);
++  }
++  else
++  {
++    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
++  }
+   saddr.sin_port = htons((u_short) port);
+   return (::bind(fd, (struct sockaddr *)&saddr, sizeof(saddr)) == 0);
+ }
+diff -N -r -u xmlrpc++0.7.old/src/XmlRpcSocket.h xmlrpc++0.7/src/XmlRpcSocket.h
+--- xmlrpc++0.7.old/src/XmlRpcSocket.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcSocket.h	2007-04-05 15:46:30.000000000 -0400
+@@ -43,6 +43,12 @@
+     //! Bind to a specified port
+     static bool bind(int socket, int port);
+ 
++    //! Bind to a specified port on a specified host
++    static bool bind(int socket, const std::string& host, int port);
++
++    //! Bind to a specified port on a specified host
++    static bool bind(int socket, const char* host, int port);
++
+     //! Set socket in listen mode
+     static bool listen(int socket, int backlog);
+ 
+diff -N -r -u xmlrpc++0.7.old/test/HelloServer.cpp xmlrpc++0.7/test/HelloServer.cpp
+--- xmlrpc++0.7.old/test/HelloServer.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/test/HelloServer.cpp	2007-04-05 15:46:30.000000000 -0400
+@@ -60,16 +60,23 @@
+ 
+ int main(int argc, char* argv[])
+ {
+-  if (argc != 2) {
+-    std::cerr << "Usage: HelloServer serverPort\n";
++  if (argc != 2 && argc != 3) {
++    std::cerr << "Usage: HelloServer [serverHost] serverPort\n";
+     return -1;
+   }
+-  int port = atoi(argv[1]);
++  int port = atoi(argv[argc-1]);  // Last argument
+ 
+   XmlRpc::setVerbosity(5);
+ 
+-  // Create the server socket on the specified port
+-  s.bindAndListen(port);
++  // Create the server socket on the specified port (and host)
++  if (argc == 2)
++  {
++    s.bindAndListen(port);
++  }
++  else
++  {
++    s.bindAndListen(argv[1], port);
++  }
+ 
+   // Enable introspection
+   s.enableIntrospection(true);

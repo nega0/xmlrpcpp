@@ -1,0 +1,35 @@
+diff -u -r xmlrpc++0.7.old/src/XmlRpcValue.cpp xmlrpc++0.7/src/XmlRpcValue.cpp
+--- xmlrpc++0.7.old/src/XmlRpcValue.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcValue.cpp	2007-04-05 13:37:50.000000000 -0400
+@@ -389,6 +389,8 @@
+     if (sscanf(stime.c_str(),"%4d%2d%2dT%2d:%2d:%2d",&t.tm_year,&t.tm_mon,&t.tm_mday,&t.tm_hour,&t.tm_min,&t.tm_sec) != 6)
+       return false;
+ 
++    t.tm_year -= 1900;
++    t.tm_mon  -= 1;
+     t.tm_isdst = -1;
+     _type = TypeDateTime;
+     _value.asTime = new struct tm(t);
+@@ -400,8 +402,8 @@
+   {
+     struct tm* t = _value.asTime;
+     char buf[20];
+-    snprintf(buf, sizeof(buf)-1, "%4d%02d%02dT%02d:%02d:%02d", 
+-      t->tm_year,t->tm_mon,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec);
++    snprintf(buf, sizeof(buf)-1, "%04d%02d%02dT%02d:%02d:%02d", 
++      1900+t->tm_year,1+t->tm_mon,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec);
+     buf[sizeof(buf)-1] = 0;
+ 
+     std::string xml = VALUE_TAG;
+@@ -552,8 +554,8 @@
+         {
+           struct tm* t = _value.asTime;
+           char buf[20];
+-          snprintf(buf, sizeof(buf)-1, "%4d%02d%02dT%02d:%02d:%02d", 
+-            t->tm_year,t->tm_mon,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec);
++          snprintf(buf, sizeof(buf)-1, "%04d%02d%02dT%02d:%02d:%02d", 
++            1900+t->tm_year,1+t->tm_mon,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec);
+           buf[sizeof(buf)-1] = 0;
+           os << buf;
+           break;
+Only in xmlrpc++0.7/src: XmlRpcValue.cpp.orig

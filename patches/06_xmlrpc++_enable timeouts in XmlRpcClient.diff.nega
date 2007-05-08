@@ -1,0 +1,126 @@
+diff -u -r xmlrpc++0.7.old/src/XmlRpcClient.cpp xmlrpc++0.7/src/XmlRpcClient.cpp
+--- xmlrpc++0.7.old/src/XmlRpcClient.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcClient.cpp	2007-04-05 13:41:37.000000000 -0400
+@@ -72,7 +72,7 @@
+ // Returns true if the request was sent and a result received (although the result
+ // might be a fault).
+ bool 
+-XmlRpcClient::execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result)
++XmlRpcClient::execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result, double timeout)
+ {
+   XmlRpcUtil::log(1, "XmlRpcClient::execute: method %s (_connectionState %d).", method, _connectionState);
+ 
+@@ -95,8 +95,26 @@
+     return false;
+ 
+   result.clear();
+-  double msTime = -1.0;   // Process until exit is called
+-  _disp.work(msTime);
++  
++  if (_disp.work(timeout) == XmlRpcDispatch::Reason_TimedOut)
++  {
++    // Connection timed out, possibly because the server died. Let's try
++    // to re-start the connection once again if this is keep-open connection:
++    if (getKeepOpen())
++    {
++      XmlRpcUtil::log(4, "XmlRpcClient::execute: re-trying connection");
++      XmlRpcSource::close();
++      _eof = false;
++  
++      if ( ! setupConnection())
++        return false;
++
++      if (_disp.work(timeout) == XmlRpcDispatch::Reason_TimedOut)
++      {
++        return false;
++      }
++    }
++  }
+ 
+   if (_connectionState != IDLE || ! parseResponse(result))
+     return false;
+diff -u -r xmlrpc++0.7.old/src/XmlRpcClient.h xmlrpc++0.7/src/XmlRpcClient.h
+--- xmlrpc++0.7.old/src/XmlRpcClient.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcClient.h	2007-04-05 13:41:37.000000000 -0400
+@@ -55,7 +55,7 @@
+     //! Currently this is a synchronous (blocking) implementation (execute
+     //! does not return until it receives a response or an error). Use isFault()
+     //! to determine whether the result is a fault response.
+-    bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result);
++    bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result, double timeout = -1.0);
+ 
+     //! Returns true if the result of the last execute() was a fault response.
+     bool isFault() const { return _isFault; }
+diff -u -r xmlrpc++0.7.old/src/XmlRpcDispatch.cpp xmlrpc++0.7/src/XmlRpcDispatch.cpp
+--- xmlrpc++0.7.old/src/XmlRpcDispatch.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcDispatch.cpp	2007-04-05 13:41:37.000000000 -0400
+@@ -70,7 +70,7 @@
+ 
+ 
+ // Watch current set of sources and process events
+-void
++XmlRpcDispatch::WorkEndReason
+ XmlRpcDispatch::work(double timeout)
+ {
+   // Compute end time
+@@ -78,6 +78,8 @@
+   _doClear = false;
+   _inWork = true;
+ 
++  WorkEndReason reason = Reason_NoSources;
++
+   // Only work while there is something to monitor
+   while (_sources.size() > 0) {
+ 
+@@ -113,7 +115,7 @@
+     {
+       XmlRpcUtil::error("Error in XmlRpcDispatch::work: error in select (%d).", nEvents);
+       _inWork = false;
+-      return;
++      return Reason_Error;
+     }
+ 
+     // Process events
+@@ -157,10 +159,14 @@
+ 
+     // Check whether end time has passed
+     if (0 <= _endTime && getTime() > _endTime)
++    {
++      reason = (_endTime == 0.0) ? Reason_Interrupted : Reason_TimedOut;
+       break;
++    }
+   }
+ 
+   _inWork = false;
++  return reason;
+ }
+ 
+ 
+Only in xmlrpc++0.7/src: XmlRpcDispatch.cpp.orig
+diff -u -r xmlrpc++0.7.old/src/XmlRpcDispatch.h xmlrpc++0.7/src/XmlRpcDispatch.h
+--- xmlrpc++0.7.old/src/XmlRpcDispatch.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcDispatch.h	2007-04-05 13:41:37.000000000 -0400
+@@ -31,6 +31,14 @@
+       WritableEvent = 2,    //!< connected/data can be written without blocking
+       Exception     = 4     //!< uh oh
+     };
++
++    //! Values indicating the reason why work() returned
++    enum WorkEndReason {
++      Reason_TimedOut,      //!< select timed out on msTime
++      Reason_Interrupted,   //!< exit() was called
++      Reason_NoSources,     //!< no more sources to monitor
++      Reason_Error          //!< an error occured
++    };
+     
+     //! Monitor this source for the event types specified by the event mask
+     //! and call its event handler when any of the events occur.
+@@ -48,7 +56,7 @@
+ 
+     //! Watch current set of sources and process events for the specified
+     //! duration (in ms, -1 implies wait forever, or until exit is called)
+-    void work(double msTime);
++    WorkEndReason work(double msTime);
+ 
+     //! Exit from work routine
+     void exit();

@@ -1,0 +1,54 @@
+diff -u -r xmlrpc++0.7.old/src/XmlRpcValue.cpp xmlrpc++0.7/src/XmlRpcValue.cpp
+--- xmlrpc++0.7.old/src/XmlRpcValue.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcValue.cpp	2007-04-05 13:43:41.000000000 -0400
+@@ -66,6 +66,12 @@
+ 
+   
+   // Type checking
++  void XmlRpcValue::assertTypeOrInvalid(Type t) const
++  {
++    if (_type != t)
++      throw XmlRpcException("type error");
++  }
++
+   void XmlRpcValue::assertTypeOrInvalid(Type t)
+   {
+     if (_type == TypeInvalid)
+Only in xmlrpc++0.7/src: XmlRpcValue.cpp.orig
+diff -u -r xmlrpc++0.7.old/src/XmlRpcValue.h xmlrpc++0.7/src/XmlRpcValue.h
+--- xmlrpc++0.7.old/src/XmlRpcValue.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcValue.h	2007-04-05 13:43:41.000000000 -0400
+@@ -84,12 +84,18 @@
+     bool operator==(XmlRpcValue const& other) const;
+     bool operator!=(XmlRpcValue const& other) const;
+ 
+-    operator bool&()          { assertTypeOrInvalid(TypeBoolean); return _value.asBool; }
+-    operator int&()           { assertTypeOrInvalid(TypeInt); return _value.asInt; }
+-    operator double&()        { assertTypeOrInvalid(TypeDouble); return _value.asDouble; }
+-    operator std::string&()   { assertTypeOrInvalid(TypeString); return *_value.asString; }
+-    operator BinaryData&()    { assertTypeOrInvalid(TypeBase64); return *_value.asBinary; }
+-    operator struct tm&()     { assertTypeOrInvalid(TypeDateTime); return *_value.asTime; }
++    operator bool&()                    { assertTypeOrInvalid(TypeBoolean); return _value.asBool; }
++    operator bool() const               { assertTypeOrInvalid(TypeBoolean); return _value.asBool; }
++    operator int&()                     { assertTypeOrInvalid(TypeInt); return _value.asInt; }
++    operator int() const                { assertTypeOrInvalid(TypeInt); return _value.asInt; }
++    operator double&()                  { assertTypeOrInvalid(TypeDouble); return _value.asDouble; }
++    operator double() const             { assertTypeOrInvalid(TypeDouble); return _value.asDouble; }
++    operator std::string&()             { assertTypeOrInvalid(TypeString); return *_value.asString; }
++    operator const std::string&() const { assertTypeOrInvalid(TypeString); return *_value.asString; }
++    operator BinaryData&()              { assertTypeOrInvalid(TypeBase64); return *_value.asBinary; }
++    operator const BinaryData&() const  { assertTypeOrInvalid(TypeBase64); return *_value.asBinary; }
++    operator struct tm&()               { assertTypeOrInvalid(TypeDateTime); return *_value.asTime; }
++    operator const struct tm&() const   { assertTypeOrInvalid(TypeDateTime); return *_value.asTime; }
+ 
+     XmlRpcValue const& operator[](int i) const { assertArray(i+1); return _value.asArray->at(i); }
+     XmlRpcValue& operator[](int i)             { assertArray(i+1); return _value.asArray->at(i); }
+@@ -135,6 +141,7 @@
+     void invalidate();
+ 
+     // Type checking
++    void assertTypeOrInvalid(Type t) const;
+     void assertTypeOrInvalid(Type t);
+     void assertArray(int size) const;
+     void assertArray(int size);
+Only in xmlrpc++0.7/src: XmlRpcValue.h.orig

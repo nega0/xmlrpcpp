@@ -1,0 +1,101 @@
+diff -u -r xmlrpc++0.7.old/src/XmlRpcDispatch.cpp xmlrpc++0.7/src/XmlRpcDispatch.cpp
+--- xmlrpc++0.7.old/src/XmlRpcDispatch.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcDispatch.cpp	2007-04-05 13:38:50.000000000 -0400
+@@ -5,6 +5,7 @@
+ 
+ #include <math.h>
+ #include <sys/timeb.h>
++#include <assert.h>
+ 
+ #if defined(_WINDOWS)
+ # include <winsock2.h>
+@@ -27,6 +28,7 @@
+   _endTime = -1.0;
+   _doClear = false;
+   _inWork = false;
++  _sourcesDelayedDelete = false;
+ }
+ 
+ 
+@@ -47,9 +49,12 @@
+ XmlRpcDispatch::removeSource(XmlRpcSource* source)
+ {
+   for (SourceList::iterator it=_sources.begin(); it!=_sources.end(); ++it)
+-    if (it->getSource() == source)
++    if (it->getSource() == source && !it->getMarkedForDeletion())
+     {
+-      _sources.erase(it);
++      if (_sourcesDelayedDelete)
++        it->getMarkedForDeletion() = true;
++      else
++        _sources.erase(it);
+       break;
+     }
+ }
+@@ -60,7 +65,7 @@
+ XmlRpcDispatch::setSourceEvents(XmlRpcSource* source, unsigned eventMask)
+ {
+   for (SourceList::iterator it=_sources.begin(); it!=_sources.end(); ++it)
+-    if (it->getSource() == source)
++    if (it->getSource() == source && !it->getMarkedForDeletion())
+     {
+       it->getMask() = eventMask;
+       break;
+@@ -124,6 +129,11 @@
+       int fd = src->getfd();
+       unsigned newMask = (unsigned) -1;
+       if (fd <= maxFd) {
++        // forbid removal of elements from _sources during handleEvent(),
++        // it would invalidate our interator:
++        assert( !_sourcesDelayedDelete );
++        _sourcesDelayedDelete = true;
++        
+         // If you select on multiple event types this could be ambiguous
+         if (FD_ISSET(fd, &inFd))
+           newMask &= src->handleEvent(ReadableEvent);
+@@ -132,8 +142,12 @@
+         if (FD_ISSET(fd, &excFd))
+           newMask &= src->handleEvent(Exception);
+ 
+-        if ( ! newMask) {
+-          _sources.erase(thisIt);  // Stop monitoring this one
++        _sourcesDelayedDelete = false;
++
++        if (thisIt->getMarkedForDeletion()) {
++          it =_sources.erase(thisIt);
++        } else if ( ! newMask) {
++          it = _sources.erase(thisIt);  // Stop monitoring this one
+           if ( ! src->getKeepOpen())
+             src->close();
+         } else if (newMask != (unsigned) -1) {
+@@ -207,3 +221,4 @@
+ }
+ 
+ 
++
+diff -u -r xmlrpc++0.7.old/src/XmlRpcDispatch.h xmlrpc++0.7/src/XmlRpcDispatch.h
+--- xmlrpc++0.7.old/src/XmlRpcDispatch.h	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcDispatch.h	2007-04-05 13:38:50.000000000 -0400
+@@ -63,11 +63,13 @@
+ 
+     // A source to monitor and what to monitor it for
+     struct MonitoredSource {
+-      MonitoredSource(XmlRpcSource* src, unsigned mask) : _src(src), _mask(mask) {}
++      MonitoredSource(XmlRpcSource* src, unsigned mask) : _src(src), _mask(mask), _markedForDeletion(false) {}
+       XmlRpcSource* getSource() const { return _src; }
+       unsigned& getMask() { return _mask; }
++      bool& getMarkedForDeletion() { return _markedForDeletion; }
+       XmlRpcSource* _src;
+       unsigned _mask;
++      bool _markedForDeletion;
+     };
+ 
+     // A list of sources to monitor
+@@ -75,6 +77,7 @@
+ 
+     // Sources being monitored
+     SourceList _sources;
++    bool _sourcesDelayedDelete;
+ 
+     // When work should stop (-1 implies wait forever, or until exit is called)
+     double _endTime;

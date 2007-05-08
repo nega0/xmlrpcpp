@@ -1,0 +1,15 @@
+diff -u -r xmlrpc++0.7.old/src/XmlRpcClient.cpp xmlrpc++0.7/src/XmlRpcClient.cpp
+--- xmlrpc++0.7.old/src/XmlRpcClient.cpp	2003-03-06 12:25:37.000000000 -0500
++++ xmlrpc++0.7/src/XmlRpcClient.cpp	2007-04-05 13:40:06.000000000 -0400
+@@ -132,8 +132,9 @@
+     if ( ! readResponse()) return 0;
+ 
+   // This should probably always ask for Exception events too
+-  return (_connectionState == WRITE_REQUEST) 
+-        ? XmlRpcDispatch::WritableEvent : XmlRpcDispatch::ReadableEvent;
++  return ((_connectionState == WRITE_REQUEST) 
++          ? XmlRpcDispatch::WritableEvent : XmlRpcDispatch::ReadableEvent) |
++         XmlRpcDispatch::Exception;
+ }
+ 
+ 
