@@ -60,16 +60,23 @@ public:
 
 int main(int argc, char* argv[])
 {
-  if (argc != 2) {
-    std::cerr << "Usage: HelloServer serverPort\n";
+  if (argc != 2 && argc != 3) {
+    std::cerr << "Usage: HelloServer [serverHost] serverPort\n";
     return -1;
   }
-  int port = atoi(argv[1]);
+  int port = atoi(argv[argc-1]);  // Last argument
 
   XmlRpc::setVerbosity(5);
 
-  // Create the server socket on the specified port
-  s.bindAndListen(port);
+  // Create the server socket on the specified port (and host)
+  if (argc == 2)
+  {
+    s.bindAndListen(port);
+  }
+  else
+  {
+    s.bindAndListen(argv[1], port);
+  }
 
   // Enable introspection
   s.enableIntrospection(true);

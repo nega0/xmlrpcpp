@@ -110,10 +110,39 @@ XmlRpcSocket::setReuseAddr(int fd)
 bool 
 XmlRpcSocket::bind(int fd, int port)
 {
+  const char *host = 0; // Indicates "listen on INADDR_ANY"
+  return (XmlRpcSocket::bind(fd, host, port));
+}
+
+
+// Bind to a specified port
+bool 
+XmlRpcSocket::bind(int fd, const std::string& host, int port)
+{
+  return (XmlRpcSocket::bind(fd, host.c_str(), port));
+}
+
+
+// Bind to a specified port
+bool 
+XmlRpcSocket::bind(int fd, const char *host, int port)
+{
   struct sockaddr_in saddr;
   memset(&saddr, 0, sizeof(saddr));
   saddr.sin_family = AF_INET;
-  saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  if (host)
+  {
+    // In theory, it's not thread-safe to call gethostbyname(). In practice,
+    // binding to a server port is usually done at startup; we're unlikely to
+    // see two threads simultaneously try to bind to ports
+    struct hostent *hp = gethostbyname(host);
+    if (hp == 0) return false;
+    memcpy(&saddr.sin_addr, hp->h_addr, hp->h_length);
+  }
+  else
+  {
+    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  }
   saddr.sin_port = htons((u_short) port);
   return (::bind(fd, (struct sockaddr *)&saddr, sizeof(saddr)) == 0);
 }

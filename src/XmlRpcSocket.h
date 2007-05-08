@@ -43,6 +43,12 @@ namespace XmlRpc {
     //! Bind to a specified port
     static bool bind(int socket, int port);
 
+    //! Bind to a specified port on a specified host
+    static bool bind(int socket, const std::string& host, int port);
+
+    //! Bind to a specified port on a specified host
+    static bool bind(int socket, const char* host, int port);
+
     //! Set socket in listen mode
     static bool listen(int socket, int backlog);
 

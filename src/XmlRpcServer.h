@@ -56,6 +56,14 @@ namespace XmlRpc {
     //! set it in listen mode to make it available for clients.
     bool bindAndListen(int port, int backlog = 5);
 
+    //! Create a socket, bind to the specified host and port, and
+    //! set it in listen mode to make it available for clients.
+    bool bindAndListen(const char* host, int port, int backlog = 5);
+
+    //! Create a socket, bind to the specified host and port, and
+    //! set it in listen mode to make it available for clients.
+    bool bindAndListen(const std::string& host, int port, int backlog = 5);
+
     //! Process client requests for the specified time
     void work(double msTime);
 

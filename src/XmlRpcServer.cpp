@@ -69,6 +69,19 @@ XmlRpcServer::findMethod(const std::string& name) const
 bool 
 XmlRpcServer::bindAndListen(int port, int backlog /*= 5*/)
 {
+	const char* host = 0;  // Indicates "listen on INADDR_ANY"
+	return XmlRpcServer::bindAndListen(host, port, backlog);
+}
+
+bool 
+XmlRpcServer::bindAndListen(const std::string& host, int port, int backlog /*= 5*/)
+{
+	return XmlRpcServer::bindAndListen(host.c_str(), port, backlog);
+}
+
+bool 
+XmlRpcServer::bindAndListen(const char* host, int port, int backlog /*= 5*/)
+{
   int fd = XmlRpcSocket::socket();
   if (fd < 0)
   {
@@ -95,10 +108,13 @@ XmlRpcServer::bindAndListen(int port, int backlog /*= 5*/)
   }
 
   // Bind to the specified port on the default interface
-  if ( ! XmlRpcSocket::bind(fd, port))
+  if ( ! XmlRpcSocket::bind(fd, host, port))
   {
     this->close();
-    XmlRpcUtil::error("XmlRpcServer::bindAndListen: Could not bind to specified port (%s).", XmlRpcSocket::getErrorMsg().c_str());
+    if (host)
+      XmlRpcUtil::error("XmlRpcServer::bindAndListen: Could not bind to host %s port %d (%s).", host, port, XmlRpcSocket::getErrorMsg().c_str());
+    else
+      XmlRpcUtil::error("XmlRpcServer::bindAndListen: Could not bind to port %d (%s).", port, XmlRpcSocket::getErrorMsg().c_str());
     return false;
   }
 
@@ -110,7 +126,13 @@ XmlRpcServer::bindAndListen(int port, int backlog /*= 5*/)
     return false;
   }
 
-  XmlRpcUtil::log(2, "XmlRpcServer::bindAndListen: server listening on port %d fd %d", port, fd);
+  if (host) {
+    XmlRpcUtil::log(2, "XmlRpcServer::bindAndListen: server listening on host %s port %d fd %d", host, port, fd);
+  }
+  else
+  {
+    XmlRpcUtil::log(2, "XmlRpcServer::bindAndListen: server listening on port %d fd %d", port, fd);
+  }
 
   // Notify the dispatcher to listen on this source when we are in work()
   _disp.addSource(this, XmlRpcDispatch::ReadableEvent);
