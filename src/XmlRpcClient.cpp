@@ -132,8 +132,9 @@ XmlRpcClient::handleEvent(unsigned eventType)
     if ( ! readResponse()) return 0;
 
   // This should probably always ask for Exception events too
-  return (_connectionState == WRITE_REQUEST) 
-        ? XmlRpcDispatch::WritableEvent : XmlRpcDispatch::ReadableEvent;
+  return ((_connectionState == WRITE_REQUEST) 
+          ? XmlRpcDispatch::WritableEvent : XmlRpcDispatch::ReadableEvent) |
+         XmlRpcDispatch::Exception;
 }
 
 
