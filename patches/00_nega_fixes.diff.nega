@@ -1,0 +1,50 @@
+Index: test/Validator.cpp
+===================================================================
+--- test/Validator.cpp	(.../xmlrpc++0.7)	(revision 18)
++++ test/Validator.cpp	(.../xmlrpc++_nega_fixes)	(revision 18)
+@@ -137,7 +137,7 @@
+   {
+     std::cerr << "ModerateSizeArrayCheck\n";
+     std::string s = params[0][0];
+-    s += params[0][params[0].size()-1];
++    s += (std::string) params[0][params[0].size()-1];
+     result = s;
+   }
+ } moderateSizeArrayCheck(&s);
+Index: src/XmlRpc.h
+===================================================================
+--- src/XmlRpc.h	(.../xmlrpc++0.7)	(revision 18)
++++ src/XmlRpc.h	(.../xmlrpc++_nega_fixes)	(revision 18)
+@@ -48,6 +48,8 @@
+ 
+     //! Report an error. Custom error handlers should define this method.
+     virtual void error(const char* msg) = 0;
++    
++    virtual ~XmlRpcErrorHandler() {};
+ 
+   protected:
+     static XmlRpcErrorHandler* _errorHandler;
+@@ -75,6 +77,8 @@
+     //! Output a message. Custom error handlers should define this method.
+     virtual void log(int level, const char* msg) = 0;
+ 
++    virtual ~XmlRpcLogHandler() {};
++
+   protected:
+     static XmlRpcLogHandler* _logHandler;
+     static int _verbosity;
+Index: Makefile
+===================================================================
+--- Makefile	(.../xmlrpc++0.7)	(revision 18)
++++ Makefile	(.../xmlrpc++_nega_fixes)	(revision 18)
+@@ -3,8 +3,8 @@
+ SRC		= ./src
+ CPPFLAGS	= -I$(SRC)
+ DEBUG		= -g
+-OPTIMIZE	= -O2
+-GCCWARN		= -Wall -Wstrict-prototypes
++OPTIMIZE	= -O0
++GCCWARN		= -Wall # -Wstrict-prototypes
+ CXXFLAGS	= $(DEBUG) $(GCCWARN) $(OPTIMIZE) $(INCLUDES)
+ 
+ LIB		= ./libXmlRpc.a
