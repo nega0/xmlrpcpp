@@ -1,6 +1,6 @@
-diff -u -r xmlrpc++0.7.old/src/XmlRpcValue.cpp xmlrpc++0.7/src/XmlRpcValue.cpp
---- xmlrpc++0.7.old/src/XmlRpcValue.cpp	2003-03-06 12:25:37.000000000 -0500
-+++ xmlrpc++0.7/src/XmlRpcValue.cpp	2007-04-05 13:37:50.000000000 -0400
+diff -Nur -x .svn xmlrpc++.old/src/XmlRpcValue.cpp xmlrpc++/src/XmlRpcValue.cpp
+--- xmlrpc++.old/src/XmlRpcValue.cpp	2007-05-16 16:14:52.000000000 -0400
++++ xmlrpc++/src/XmlRpcValue.cpp	2007-05-16 16:05:52.000000000 -0400
 @@ -389,6 +389,8 @@
      if (sscanf(stime.c_str(),"%4d%2d%2dT%2d:%2d:%2d",&t.tm_year,&t.tm_mon,&t.tm_mday,&t.tm_hour,&t.tm_min,&t.tm_sec) != 6)
        return false;
@@ -32,4 +32,15 @@ diff -u -r xmlrpc++0.7.old/src/XmlRpcValue.cpp xmlrpc++0.7/src/XmlRpcValue.cpp
            buf[sizeof(buf)-1] = 0;
            os << buf;
            break;
-Only in xmlrpc++0.7/src: XmlRpcValue.cpp.orig
+diff -Nur -x .svn xmlrpc++.old/test/TestValues.cpp xmlrpc++/test/TestValues.cpp
+--- xmlrpc++.old/test/TestValues.cpp	2007-05-16 16:14:52.000000000 -0400
++++ xmlrpc++/test/TestValues.cpp	2007-05-16 16:14:00.000000000 -0400
+@@ -93,7 +93,7 @@
+   int offset = 0;
+   XmlRpcValue dateTime("<value><dateTime.iso8601>19040101T03:12:35</dateTime.iso8601></value>", &offset);
+   struct tm &t = dateTime;
+-  assert(t.tm_year == 1904 && t.tm_min == 12);
++  assert(t.tm_year == (1904 - 1900)&& t.tm_min == 12);
+ }
+ 
+ 
