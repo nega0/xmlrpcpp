@@ -93,7 +93,7 @@ void testDateTime()
   int offset = 0;
   XmlRpcValue dateTime("<value><dateTime.iso8601>19040101T03:12:35</dateTime.iso8601></value>", &offset);
   struct tm &t = dateTime;
-  assert(t.tm_year == 1904 && t.tm_min == 12);
+  assert(t.tm_year == (1904 - 1900)&& t.tm_min == 12);
 }
 
 
