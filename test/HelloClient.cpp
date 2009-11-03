@@ -3,6 +3,7 @@
 // on windows)
 #include "XmlRpc.h"
 #include <iostream>
+#include <cstdlib>
 using namespace XmlRpc;
 
 int main(int argc, char* argv[])

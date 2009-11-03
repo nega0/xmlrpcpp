@@ -7,6 +7,8 @@
 # include <stdio.h>
 # include <stdlib.h>
 #endif
+#include <string.h>
+#include <strings.h>
 
 using namespace XmlRpc;
 

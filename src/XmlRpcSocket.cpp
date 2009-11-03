@@ -1,6 +1,7 @@
 
 #include "XmlRpcSocket.h"
 #include "XmlRpcUtil.h"
+#include <string.h>
 
 #ifndef MAKEDEPEND
 
