@@ -1,11 +1,12 @@
 // TestValues.cpp : Test XML encoding and decoding of XmlRpcValues.
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include "XmlRpcValue.h"
 
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 
