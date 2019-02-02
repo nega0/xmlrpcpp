@@ -9,6 +9,12 @@
 #if !defined(__BASE64_H_INCLUDED__)
 #define __BASE64_H_INCLUDED__ 1
 
+#if defined(__PATHSCALE__) || defined(__clang__)
+# include <ios>
+#else
+# include <iosfwd>
+#endif
+
 #ifndef MAKEDEPEND
 # include <iterator>
 #endif
