@@ -29,14 +29,15 @@ $(LIB):		$(OBJ)
 
 
 tests:		$(LIB)
-		cd test && $(MAKE) CXX=$(CXX) CXXFLAGS="$(CXXFLAGS)" SYSTEMLIBS="$(SYSTEMLIBS)"
+		@echo Building and running tests...
+		@cd test && $(MAKE) CXX=$(CXX) CXXFLAGS="$(CXXFLAGS)" SYSTEMLIBS="$(SYSTEMLIBS)"
 
 doc doxygen:
-		cd src && doxygen Doxyfile
+		@cd src && doxygen Doxyfile
 
+.PHONY:
 clean:
-		rm -f $(SRC)/*.o
-		rm -f $(SRC)/*~
-		rm -f $(LIB)
-		cd test && $(MAKE) clean
-
+		@rm -f $(SRC)/*.o
+		@rm -f $(SRC)/*~ $(SRC)/*.bak
+		@rm -f $(LIB)
+		@cd test && $(MAKE) clean

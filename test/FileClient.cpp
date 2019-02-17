@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
     else
       std::cout << "Error calling '" << name << "'\n\n";
     std::cout << "Again? [y]: ";
-    std::string ans;
-    std::cin >> ans;
+    std::string ans = "n";
+    // std::cin >> ans;
     if (ans != "" && ans != "y") break;
   }
 

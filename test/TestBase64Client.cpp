@@ -36,9 +36,10 @@ int main(int argc, char* argv[])
       for (int i=0; i<n; ++i)
         outfile << data[i];
     }
-  }
-  else
+  } else {
     std::cout << "Error calling 'TestBase64'\n\n";
+    return 1;
+  }
 
   return 0;
 }
