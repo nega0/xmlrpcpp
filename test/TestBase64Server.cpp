@@ -40,6 +40,7 @@ public:
         if (infile.eof()) break;
         data.push_back(c);
       }
+      s.exit();
       std::cerr << "Read " << n << " bytes from pngnow.png\n";
     }
   }

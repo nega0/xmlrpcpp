@@ -58,6 +58,20 @@ public:
 } sum(&s);
 
 
+// a contrived "test" to close the server. obviously silly IRL
+class Goodbye : public XmlRpcServerMethod
+{
+public:
+  Goodbye(XmlRpcServer* s) : XmlRpcServerMethod("Goodbye", s) {}
+
+  void execute(XmlRpcValue& params, XmlRpcValue& result)
+  {
+    s.exit();
+    result = true;
+  }
+} goodbye(&s);
+
+
 int main(int argc, char* argv[])
 {
   if (argc != 2 && argc != 3) {

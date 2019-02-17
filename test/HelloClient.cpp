@@ -82,5 +82,8 @@ int main(int argc, char* argv[])
   else
     std::cout << "\nError calling 'system.multicall'\n";
 
+  c.execute("Goodbye", noArgs, result);
+  std::cout << "\nGoodbye result = " << result << std::endl;
+
   return 0;
 }
