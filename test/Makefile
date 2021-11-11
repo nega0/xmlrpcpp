@@ -31,7 +31,7 @@ runtest:	$(TESTS)
 		@echo Running "base64" test...
 		@(./TestBase64Server 13133 > /dev/null 2>&1 &)
 		@./TestBase64Client localhost 13133 output.png > /dev/null 2>&1
-		@shasum -s -p -a 224 -c pngcksum
+		@shasum -s -U -a 224 -c pngcksum
 
 		@echo Running "values" test...
 		@./TestValues
