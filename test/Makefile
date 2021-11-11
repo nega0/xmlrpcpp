@@ -1,5 +1,5 @@
 # makefile written for gnu make
-CXX		= /usr/local/gcc-3.1/bin/g++ 
+CXX		= /usr/local/gcc-3.1/bin/g++
 SRC		= ../src
 CPPFLAGS	= -I$(SRC)
 DEBUG		= -g
@@ -36,13 +36,13 @@ runtest:	$(TESTS)
 		@echo Running "values" test...
 		@./TestValues
 
-		@echo Skipping "xml" test...
-#		@./TestXml
+		@echo Running "xml encode/decode" test...
+		@echo "" | ./TestXml > /dev/null 2>&1
 
 		@echo Running "validator" test...
 		@(./Validator 13135 > /dev/null 2>&1 &)
 		@for i in *.xml; do echo "  w/ $$i" ; ./FileClient localhost 13135 $$i > /dev/null 2>&1 ; done
 
 clean:
-		@rm -rf *.o .dSYM/
+		@rm -rf *.o *.dSYM/
 		@rm -f $(TESTS) output.png
